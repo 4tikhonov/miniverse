@@ -31,7 +31,6 @@ class StatsMakerDataverses(StatsMakerBase):
         # Note!  To really work, this logic needs to be applied to
         #   Datasets, Datafiles, etc.
         self.include_harvested = kwargs.get('include_harvested', True)
-	self.affiliation = kwargs.get('affiliation', '')
 
     # ----------------------------
     #  Dataverse counts
@@ -70,7 +69,6 @@ class StatsMakerDataverses(StatsMakerBase):
                     )
 
         sql_query = str(q.query)
-	sql_query = str(filter_params)
 
         data_dict = OrderedDict()
         data_dict['count'] = q.count()
@@ -155,10 +153,6 @@ class StatsMakerDataverses(StatsMakerBase):
 
         # add exclude filters date filters
         #
-	# DANS place
-	#filter_params["affiliation"] = "DANS"
-#	affiliation = request.GET.get('affiliation', '') 
-
         dv_counts_by_month = Dataverse.objects.select_related('dvobject'\
                             ).exclude(**exclude_params\
                             ).filter(**filter_params)

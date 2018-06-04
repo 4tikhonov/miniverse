@@ -15,16 +15,11 @@ from dv_apps.datafiles.models import Datafile, FileMetadata
 from dv_apps.metrics.stats_util_datasets import StatsMakerDatasets
 from dv_apps.metrics.stats_util_dataverses import StatsMakerDataverses
 from dv_apps.metrics.stats_util_files import StatsMakerFiles
-from dv_apps.metrics.stats_util_base import EASY_STATISTICS
 
 from dv_apps.utils.metrics_cache_time import get_metrics_cache_time
 from dv_apps.utils.date_helper import get_one_year_ago
 
-from dv_apps.metrics.forms import Metrics
-from django.http import HttpResponse, Http404
-
 FIVE_HOURS = 60 * 60 * 5
-
 
 """
 from django.core.cache import cache
@@ -54,123 +49,18 @@ def view_public_visualizations_last12(request):
 
     # start from the 1st day of last year's month
     #
-    #filters = dict(start_date=one_year_ago.strftime('%Y-%m-01'))
-    filters = dict(affiliation='DANS', start_date=one_year_ago.strftime('%Y-%m-01'))
+    date_filters = dict(start_date=one_year_ago.strftime('%Y-%m-01'))
 
-    return view_public_visualizations(request, **filters)
+    return view_public_visualizations(request, **date_filters)
 
-@cache_page(get_metrics_cache_time())
-def downloads(request, **kwargs):
-    resp_dict = {}
-    """
-    Return HTML/D3Plus visualizations for a variety of public statistics
-    """
-    EASY_STATISTICS = 1
-    resp_dict = {}
-
-    if EASY_STATISTICS:
-        if request.method == "POST":
-            form = Metrics(request.POST)
-        else:
-            form = Metrics()
-        kwargs["category"] = form.data.get("category", "audience")
-        kwargs["start_date"] = form.data.get("start_date", "2017-01-01")
-        kwargs["end_date"] = form.data.get("end_date", "2017-12-31")
-
-    if kwargs and len(kwargs) > 0:
-        # kwargs override GET parameters
-        stats_datasets = StatsMakerDatasets(**kwargs)
-        stats_dvs = StatsMakerDataverses(**kwargs)
-        stats_files = StatsMakerFiles(**kwargs)
-    else:
-        stats_datasets = StatsMakerDatasets(**request.GET.dict())
-        stats_dvs = StatsMakerDataverses(**request.GET.dict())
-        stats_files = StatsMakerFiles(**request.GET.dict())
-    return render(request, 'metrics/download.html', resp_dict)
-
-
-@cache_page(get_metrics_cache_time())
-def view_easy_visualizations(request, **kwargs):
-    resp_dict = {}
-    """
-    Return HTML/D3Plus visualizations for a variety of public statistics
-    """
-    EASY_STATISTICS = 1
-    resp_dict = {}
-
-    if EASY_STATISTICS:
-        if request.method == "POST":
-            form = Metrics(request.POST)
-        else:
-            form = Metrics()
-        kwargs["category"] = form.data.get("category", "audience")
-        kwargs["start_date"] = form.data.get("start_date", "2008-01-01")
-        kwargs["end_date"] = form.data.get("end_date", "2017-07-31")
-
-    if kwargs and len(kwargs) > 0:
-        # kwargs override GET parameters
-        stats_datasets = StatsMakerDatasets(**kwargs)
-        stats_dvs = StatsMakerDataverses(**kwargs)
-        stats_files = StatsMakerFiles(**kwargs)
-    else:
-        stats_datasets = StatsMakerDatasets(**request.GET.dict())
-        stats_dvs = StatsMakerDataverses(**request.GET.dict())
-        stats_files = StatsMakerFiles(**request.GET.dict())
-
-    # Start an OrderedDict
-    resp_dict = OrderedDict()
-    # -----------------------------------
-    # Dataset deposits  each month - EASY
-    # -----------------------------------
-    if EASY_STATISTICS:
-        # inclusive bulk deposits
-        stats_monthly_deposit_counts = stats_datasets.get_easy_deposit_count_by_month()
-        dataset_counts_by_category = stats_datasets.get_dataset_category_counts()
-        files_downloads = stats_files.get_file_downloads_by_month()
-        if not stats_monthly_deposit_counts.has_error():
-            resp_dict['deposit_counts_by_month'] = list(stats_monthly_deposit_counts.result_data['records'])
-        # exclusive bulk deposits
-        stats_monthly_deposit_counts = stats_datasets.get_easy_deposit_count_by_month(True)
-        if not stats_monthly_deposit_counts.has_error():
-            resp_dict['deposit_counts_by_month_no_bulk'] = list(stats_monthly_deposit_counts.result_data['records'])
-
-    if EASY_STATISTICS:
-        resp_dict['out'] = str(list(stats_monthly_deposit_counts.result_data['records']))
-        resp_dict['out'] = str(resp_dict['deposit_counts_by_month'])
-        resp_dict['out'] = str(dataset_counts_by_category.result_data['records'])
-        resp_dict['out'] = str(files_downloads.result_data['records'])
-        resp_dict['file_counts_by_month'] = list(stats_monthly_deposit_counts.result_data['records'])
-        resp_dict['deposit_counts_by_month'] = list(stats_monthly_deposit_counts.result_data['records'])
-        resp_dict['dataverse_counts_by_month_sql'] = 'sql'
-        resp_dict['dataset_counts_by_category'] = list(dataset_counts_by_category.result_data['records'])
-        resp_dict['file_downloads_by_month'] = list(files_downloads.result_data['records'])
-        resp_dict['form'] = form
-        return render(request, 'metrics/metrics_total.html', resp_dict)
-    else:
-        return render(request, 'metrics/metrics_public.html', resp_dict)
 
 @cache_page(get_metrics_cache_time())
 def view_public_visualizations(request, **kwargs):
     """
     Return HTML/D3Plus visualizations for a variety of public statistics
     """
-    resp_dict = {}
 
-    if EASY_STATISTICS:
-        if request.method == "POST":
-            form = Metrics(request.POST)
-        else:
-            form = Metrics()
-        kwargs["category"] = form.data.get("category", "audience")
-        kwargs["start_date"] = form.data.get("start_date", "2017-01-01")
-        kwargs["end_date"] = form.data.get("end_date", "2017-12-31")
-
-    #kwargs["affiliation"] = "NIOO-KNAW"
-    #kwargs["start_date"] = "2018-01-01"
-    #kwargs["id"] = 686
-
-    i = 0
-    if i and kwargs and len(kwargs) > 0:
+    if kwargs and len(kwargs) > 0:
         # kwargs override GET parameters
         stats_datasets = StatsMakerDatasets(**kwargs)
         stats_dvs = StatsMakerDataverses(**kwargs)
@@ -186,22 +76,17 @@ def view_public_visualizations(request, **kwargs):
     # -------------------------
     # Dataverses created each month
     # -------------------------
-    # DANS count
-    stats_result_dv_counts = stats_dvs.get_dataverse_counts_by_month(**request.GET.dict()) #_published()
-    #return HttpResponse(stats_result_dv_counts.sql_query)
+    stats_result_dv_counts = stats_dvs.get_dataverse_counts_by_month_published()
     #import ipdb; ipdb.set_trace()
     if not stats_result_dv_counts.has_error():
         resp_dict['dataverse_counts_by_month'] = list(stats_result_dv_counts.result_data['records'])
         resp_dict['dataverse_counts_by_month_sql'] = stats_result_dv_counts.sql_query
 
-    #return HttpResponse(str(resp_dict))
     # -------------------------
     # Dataverse counts by type
     # -------------------------
-    #stats_result_dv_counts_by_type =\
-   #     stats_dvs.get_dataverse_counts_by_type_published(exclude_uncategorized=True)
-    stats_result_dv_counts_by_type = stats_dvs.get_dataverse_counts_by_type(**request.GET.dict())
-    #return HttpResponse(stats_result_dv_counts_by_type.sql_query)
+    stats_result_dv_counts_by_type =\
+        stats_dvs.get_dataverse_counts_by_type_published(exclude_uncategorized=True)
     if not stats_result_dv_counts_by_type.has_error():
         resp_dict['dataverse_counts_by_type'] = stats_result_dv_counts_by_type.result_data['records']
         resp_dict['dv_counts_by_category_sql'] = stats_result_dv_counts_by_type.sql_query
@@ -210,32 +95,21 @@ def view_public_visualizations(request, **kwargs):
     # -------------------------
     # Datasets created each month
     # -------------------------
-    stats_monthly_ds_counts = stats_datasets.get_dataset_counts_by_create_date(**request.GET.dict())
-    #stats_monthly_ds_counts = stats_datasets.get_dataset_counts_by_create_date(**request.GET.dict())
-    #return HttpResponse(stats_monthly_ds_counts)
+    stats_monthly_ds_counts = stats_datasets.get_dataset_counts_by_create_date_published()
     if not stats_monthly_ds_counts.has_error():
         resp_dict['dataset_counts_by_month'] = list(stats_monthly_ds_counts.result_data['records'])
         resp_dict['dataset_counts_by_month_sql'] = stats_monthly_ds_counts.sql_query
 
 
-    stats_ds_count_by_category = stats_datasets.get_dataset_category_counts(**request.GET.dict()) #_published()
-    #stats_ds_count_by_category = stats_datasets.get_dataset_category_counts()
-    #stats_ds_count_by_category = stats_datasets.get_dataverse_dataset_subject_counts(**request.GET.dict())
-    #return HttpResponse(stats_ds_count_by_category)
-    if not stats_ds_count_by_category.has_error():
-        resp_dict['category'] = stats_datasets.get_category().capitalize()
-        resp_dict['dataset_counts_by_category'] = stats_ds_count_by_category.result_data['records']
+    stats_ds_count_by_subject = stats_datasets.get_dataset_subject_counts_published()
+    if not stats_monthly_ds_counts.has_error():
+        resp_dict['dataset_counts_by_subject'] = stats_ds_count_by_subject.result_data['records']
         #resp_dict['dataset_counts_by_month_sql'] = stats_monthly_ds_counts.sql_query
 
     # -------------------------
     # Files created, by month
     # -------------------------
-    #stats_monthly_file_counts = stats_files.get_file_count_by_month_published()
-    #return HttpResponse(stats_monthly_file_counts.sql_query)
-    stats_monthly_file_counts = stats_files.get_file_count_by_month(**request.GET.dict())
-    # DANS OK
-    #return HttpResponse(stats_monthly_file_counts.query)
-    #return HttpResponse(stats_monthly_file_counts.sql_query)
+    stats_monthly_file_counts = stats_files.get_file_count_by_month_published()
     if not stats_monthly_file_counts.has_error():
         resp_dict['file_counts_by_month'] = list(stats_monthly_file_counts.result_data['records'])
         resp_dict['file_counts_by_month_sql'] = stats_monthly_file_counts.sql_query
@@ -243,8 +117,7 @@ def view_public_visualizations(request, **kwargs):
     # -------------------------
     # Files downloaded, by month
     # -------------------------
-    stats_monthly_downloads = stats_files.get_file_downloads_by_month(include_pre_dv4_downloads=True, **request.GET.dict())
-    #return HttpResponse(stats_monthly_downloads)
+    stats_monthly_downloads = stats_files.get_file_downloads_by_month_published(include_pre_dv4_downloads=True)
     if not stats_monthly_downloads.has_error():
         resp_dict['file_downloads_by_month'] = list(stats_monthly_downloads.result_data['records'])
         resp_dict['file_downloads_by_month_sql'] = stats_monthly_downloads.sql_query
@@ -261,25 +134,15 @@ def view_public_visualizations(request, **kwargs):
         resp_dict['file_content_types_top_20'] = list(stats_file_content_types.result_data)[:20]
         #resp_dict['file_content_types_json'] = json.dumps(file_content_types, indent=4)
     """
+    #success, datafile_content_type_counts =\ #stats_files.get_datafile_content_type_counts_published()
+    #if success:
+    #    resp_dict['datafile_content_type_counts'] = datafile_content_type_counts[:15]
 
-    # -----------------------------------
-    # Dataset deposits  each month - EASY
-    # -----------------------------------
-    if EASY_STATISTICS:
-        # inclusive bulk deposits
-        stats_monthly_deposit_counts = stats_datasets.get_easy_deposit_count_by_month()
-        if not stats_monthly_deposit_counts.has_error():
-            resp_dict['deposit_counts_by_month'] = list(stats_monthly_deposit_counts.result_data['records'])
-        # exclusive bulk deposits
-        stats_monthly_deposit_counts = stats_datasets.get_easy_deposit_count_by_month(True)
-        if not stats_monthly_deposit_counts.has_error():
-            resp_dict['deposit_counts_by_month_no_bulk'] = list(stats_monthly_deposit_counts.result_data['records'])
 
-    if EASY_STATISTICS:
-        resp_dict['form'] = form
-        return render(request, 'metrics/metrics_easy.html', resp_dict)
-    else:
-        return render(request, 'metrics/metrics_public.html', resp_dict)
+
+    return render(request, 'metrics/metrics_public.html', resp_dict)
+
+
 
 @cache_page(get_metrics_cache_time())
 def view_public_visualizations_last12_dataverse_org(request):

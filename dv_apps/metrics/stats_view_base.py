@@ -31,7 +31,7 @@ def send_cors_response(response):
 
     return response
 
-@method_decorator(apikey_required, name='get')
+#@method_decorator(apikey_required, name='get')
 @method_decorator(cache_page(get_metrics_api_cache_time()), name='get')
 class StatsViewSwagger(View):
     """Used to help build the swagger docs"""
@@ -75,7 +75,7 @@ class StatsViewSwagger(View):
     RESULT_NAME_DATASET = 'Dataset'
     RESULT_NAME_DATAVERSE = 'Dataverse'
     RESULT_NAME_DATAVERSE_TYPE_COUNTS = 'DataverseTypeCount'
-    RESULT_NAME_DATASET_CATEGORY_COUNTS = 'DatasetCategoryCounts'
+    RESULT_NAME_DATASET_SUBJECT_COUNTS = 'DatasetSubjectCounts'
     RESULT_NAME_BIN_COUNTS = 'BinCounts'
     RESULT_NAME_BIN_COUNTS_SIZES = 'BinCountsSizes'
 
@@ -83,7 +83,7 @@ class StatsViewSwagger(View):
     TAG_DATAVERSES = 'metrics - dataverses'
     TAG_DATASETS = 'metrics - datasets'
     TAG_DATAFILES = 'metrics - files'
-    TAG_TEST_API = 'dataverse/dataset JSON - (test, may go away)'
+    TAG_TEST_API = 'dataverse/dataset JSON - (unofficial, only published data)'
 
     # ---------------------------------------------
     # For holding errors found at the SwaggerView level
@@ -243,3 +243,7 @@ class StatsViewSwagger(View):
         response['Content-Disposition'] = 'attachment; filename=%s' % xlsx_fname
 
         return response
+
+@method_decorator(apikey_required, name='get')
+class StatsViewSwaggerKeyRequired(StatsViewSwagger):
+    pass

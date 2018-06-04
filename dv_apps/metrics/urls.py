@@ -6,7 +6,7 @@ from dv_apps.metrics import views_test,\
 # Dataset metrics
 from dv_apps.metrics.stats_views_datasets import DatasetCountByMonthView,\
     DatasetTotalCounts,\
-    DatasetCategoryCounts
+    DatasetSubjectCounts
 
 from dv_apps.metrics.stats_views_dataset_bins import FilesPerDatasetStats,\
     BytesPerDatasetStats
@@ -34,10 +34,6 @@ urlpatterns = [
 
     # views_public_metrics
     url(r'^basic-viz$', views_public_metrics.view_public_visualizations, name='view_public_visualizations'),
-
-    url(r'^basic-viz/easy$', views_public_metrics.view_easy_visualizations, name='view_easy_visualizations'),
-
-    url(r'^basic-viz/download$', views_public_metrics.downloads, name='downloads'), 
 
     url(r'^basic-viz/last12$', views_public_metrics.view_public_visualizations_last12, name='view_public_visualizations_last12'),
 
@@ -83,7 +79,7 @@ urlpatterns = [
     url(r'^dv-tree-full.json$',
         views_test.get_dataverse_full_tree_json, name='get_dataverse_full_tree_json'),
 
-    url(r'^view-bins$', views_test.view_file_bins_by_datasetversion, name='view_file_bins_by_datasetversion'),
+    #url(r'^view-bins$', views_test.view_file_bins_by_datasetversion, name='view_file_bins_by_datasetversion'),
 
 
 ]
@@ -115,7 +111,7 @@ urlpatterns += [
 
     url(r'^v1/datasets/count/monthly$', DatasetCountByMonthView.as_view(), name='view_dataset_counts_by_month'),
 
-    url(r'^v1/datasets/count/by-category$', DatasetCategoryCounts.as_view(), name='view_dataset_counts_by_category'),
+    url(r'^v1/datasets/count/by-subject$', DatasetSubjectCounts.as_view(), name='view_dataset_counts_by_subject'),
 
     url(r'^v1/datasets/file-stats$', FilesPerDatasetStats.as_view(), name='view_files_per_dataset_stats'),
 

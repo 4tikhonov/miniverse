@@ -86,7 +86,7 @@ class DatafileUtil(object):
             # --------------------------------
             file_info = OrderedDict()
 
-            file_info['filesystemname'] = related_file['filesystemname']
+            file_info['storageidentifier'] = related_file['dvobject__storageidentifier']
             file_info['contentType'] = related_file['contenttype']
             file_info['filesize_bytes'] = related_file['filesize']
 
@@ -103,7 +103,7 @@ class DatafileUtil(object):
             od['restricted'] = related_file['restricted']
             od['ingeststatus'] = related_file['ingeststatus']
             od['file_access_url'] = '%s/%s' % (self.URL_FILE_ACCESS, related_file['id'])
-
+            #DatafileUtil.get_file_access_url(datafile_id)
             od['timestamps'] = OrderedDict()
             od['timestamps']['createdate'] = fm.datafile.createdate.strftime(TIMESTAMP_MASK)
             if fm.datafile.publicationdate:
@@ -113,6 +113,14 @@ class DatafileUtil(object):
             fmt_list.append(od)
 
         return fmt_list
+
+    @staticmethod
+    def get_file_access_url(datafile_id):
+        """
+        Return the Dataverse file access url
+        example: http://localhost:8080/api/access/datafile/{ datafile_id }
+        """
+        return '%s/%s' % (DatafileUtil.URL_FILE_ACCESS, datafile_id)
 
 
     def get_datafile_categories(self, fmeta_ids):
@@ -144,10 +152,11 @@ class DatafileUtil(object):
         """
         Retrieve Datafile objects and return as a dict with key being the id
         """
-        vals = ('id', 'contenttype', 'filesystemname',\
+        vals = ('id', 'contenttype',\
             'filesize', 'checksumtype', 'checksumvalue', 'restricted',\
-            'ingeststatus')
-        dfiles = Datafile.objects.filter(dvobject__id__in=dvobject_ids\
+            'ingeststatus', 'dvobject__storageidentifier')
+        dfiles = Datafile.objects.select_related('dvobject'\
+            ).filter(dvobject__id__in=dvobject_ids\
             ).annotate(id=F('dvobject__id')\
             ).values(*vals)
 
