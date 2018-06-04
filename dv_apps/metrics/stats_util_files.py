@@ -11,6 +11,8 @@ from django.db.models import Sum
 from dv_apps.utils.date_helper import get_month_name_abbreviation,\
     get_month_name
 from dv_apps.dvobjects.models import DvObject, DTYPE_DATAFILE
+from dv_apps.dataverses.models import Dataverse
+from dv_apps.datasets.models import Dataset
 from dv_apps.datafiles.models import Datafile, FileMetadata
 from dv_apps.guestbook.models import GuestBookResponse, RESPONSE_TYPE_DOWNLOAD
 from dv_apps.metrics.stats_util_base import StatsMakerBase, TruncYearMonth
@@ -239,9 +241,27 @@ print stats_files.get_total_file_downloads().result_data
                 else:
                     filter_params[k] = v
 
+        # DANS
+        aff_ids = Dataverse.objects.select_related('dvobject'\
+                            ).filter(**filter_params)\
+                           .values_list('dvobject__id', flat=True)
+	if 'affiliation' in filter_params:
+            del(filter_params['affiliation'])
+
+        df_ids = DvObject.objects.select_related('Dataverse'\
+                            ).filter(dvobject__owner_id__in=aff_ids\
+                            ).filter(**filter_params)\
+                           .values_list('dvobject__id', flat=True)
+
+	dataset_ids = Dataset.objects.select_related('dvobject'\
+                            ).filter(dvobject__owner_id__in=df_ids\
+                            ).filter(**filter_params)\
+                           .values_list('dvobject__id', flat=True)
+
         file_counts_by_month = GuestBookResponse.objects.exclude(\
             responsetime__isnull=True\
             ).filter(**filter_params\
+	    ).filter(dataset_id__in=dataset_ids\
             ).annotate(yyyy_mm=TruncYearMonth('responsetime')\
             ).values('yyyy_mm'\
             ).annotate(count=models.Count('id')\
@@ -362,18 +382,35 @@ print stats_files.get_total_file_downloads().result_data
         # (2) Construct query
         # -----------------------------------
 
+	# DANS
+        aff_ids = Dataverse.objects.select_related('dvobject'\
+                            ).exclude(**exclude_params\
+                            ).filter(**filter_params)\
+			   .values_list('dvobject__id', flat=True)
+	if 'affiliation' in filter_params:
+	    del(filter_params['affiliation'])
+
+        df_ids = DvObject.objects.select_related('Dataverse'\
+                            ).exclude(**exclude_params\
+			    ).filter(dvobject__owner_id__in=aff_ids\
+                            ).filter(**filter_params)\
+                           .values_list('dvobject__id', flat=True)
+	#return str(dv_counts_by_month)
         # add exclude filters date filters
+	#return str(df_ids)
         #
         file_counts_by_month = Datafile.objects.select_related('dvobject'\
-                            ).exclude(**exclude_params\
-                            ).filter(**filter_params)
+                            ).prefetch_related('dvobject__owner_id').exclude(**exclude_params\
+			    ).filter(dvobject__owner_id__in=df_ids)\
+                            .filter(**filter_params)
 
+	#return file_counts_by_month.query
         # annotate query adding "month_year" and "cnt"
         #
         file_counts_by_month = file_counts_by_month.annotate(\
             yyyy_mm=TruncYearMonth('%s' % date_param)\
             ).values('yyyy_mm'\
-            ).annotate(count=models.Count('dvobject_id')\
+            ).annotate(count=models.Count('dvobject__id')\
             ).annotate(bytes=models.Sum('filesize')\
             ).values('yyyy_mm', 'count', 'bytes'\
             ).order_by('%syyyy_mm' % self.time_sort)

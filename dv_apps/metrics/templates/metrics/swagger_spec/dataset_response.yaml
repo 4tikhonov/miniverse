@@ -191,7 +191,7 @@
             specs:
               type: object
               properties:
-                storageidentifier:
+                filesystemname:
                   type: string
                 contentType:
                   type: string
@@ -208,7 +208,7 @@
                   - value
                   - type
               required:
-              - storageidentifier
+              - filesystemname
               - contentType
               - filesize_bytes
               - checksum

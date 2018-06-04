@@ -2,9 +2,7 @@
 Hanlde Slack channel requests
 """
 from django.conf.urls import url
-from dv_apps.quality_checks import views,\
-    views_notifications,\
-    views_logins
+from dv_apps.quality_checks import views, views_notifications
 
 urlpatterns = (
 
@@ -39,18 +37,5 @@ urlpatterns = (
     url(r'^broken-notifications/details/(?P<model_name>\w{4,40})$',
         views_notifications.view_broken_notification_details,
         name='view_broken_notification_details'),
-
-    url(r'^recent-logins$',
-        views_logins.view_recent_logins,
-        name='view_recent_logins'),
-
-    url(r'^new-users/(?P<selected_year>\d{4})$',
-        views_logins.view_new_user_counts,
-        name='view_new_user_counts_by_year'),
-
-    url(r'^new-users$',
-        views_logins.view_new_user_counts,
-        name='view_new_user_counts'),
-
 
 )

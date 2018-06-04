@@ -1,10 +1,8 @@
 from __future__ import unicode_literals
-from collections import OrderedDict
-
-from django.conf import settings
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.text import slugify
 from django.db import models
+
 from decimal import Decimal
 
 # Create your models here.
@@ -27,7 +25,6 @@ class Installation(models.Model):
 
     class Meta:
         ordering = ('name',)
-
 
     def save(self, *args, **kwargs):
 
@@ -62,27 +59,6 @@ class Installation(models.Model):
                 return im
         return 'n/a'
     view_logo.allow_tags=True
-
-    def to_json(self, as_string=False, pretty=False):
-        """Returns an OrderedDict of the installation attributes"""
-        od = OrderedDict()
-
-        od['id'] = self.id
-        od['name'] = self.name
-        od['full_name'] = self.full_name
-        od['is_active'] = self.is_active
-        od['description'] = self.description
-        od['lat'] = self.lat
-        od['lng'] = self.lng
-
-        od['logo'] = '%s://%s%s' % (settings.SWAGGER_SCHEME,
-                                    settings.SWAGGER_HOST,
-                                    self.logo.url)
-        #marker = self.marker
-        od['url'] = self.url
-        od['slug'] = self.slug
-        od['version'] = self.version if self.version else None
-        return od
 
 
 
